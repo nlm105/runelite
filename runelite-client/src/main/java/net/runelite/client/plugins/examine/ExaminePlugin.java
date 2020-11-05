@@ -34,10 +34,7 @@ import java.util.Deque;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.ChatMessageType;
-import net.runelite.api.Client;
-import net.runelite.api.ItemComposition;
-import net.runelite.api.ItemID;
+import net.runelite.api.*;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.MenuOptionClicked;
@@ -54,6 +51,7 @@ import net.runelite.client.chat.ChatMessageManager;
 import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.game.NPCManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.util.QuantityFormatter;
@@ -91,6 +89,9 @@ public class ExaminePlugin extends Plugin
 	private ItemManager itemManager;
 
 	@Inject
+	private NPCManager npcManager;
+
+	@Inject
 	private ChatMessageManager chatMessageManager;
 
 	@Provides
@@ -115,12 +116,14 @@ public class ExaminePlugin extends Plugin
 
 		ExamineType type;
 		int id, quantity = -1;
+		String name = "";
 		switch (event.getMenuAction())
 		{
 			case EXAMINE_ITEM:
 			{
 				type = ExamineType.ITEM;
 				id = event.getId();
+
 
 				int widgetId = event.getWidgetId();
 				int widgetGroup = TO_GROUP(widgetId);
@@ -143,11 +146,13 @@ public class ExaminePlugin extends Plugin
 						.build());
 					event.consume();
 				}
+				name = itemManager.getItemComposition(id).getName();
 				break;
 			}
 			case EXAMINE_ITEM_GROUND:
 				type = ExamineType.ITEM;
 				id = event.getId();
+				name = itemManager.getItemComposition(id).getName();
 				break;
 			case CC_OP_LOW_PRIORITY:
 			{
@@ -165,10 +170,17 @@ public class ExaminePlugin extends Plugin
 			case EXAMINE_OBJECT:
 				type = ExamineType.OBJECT;
 				id = event.getId();
+				ObjectComposition lc = client.getObjectDefinition(id);
+//				id = lc.getId();
+				name = lc.getName();
 				break;
 			case EXAMINE_NPC:
 				type = ExamineType.NPC;
 				id = event.getId();
+				NPC npc = client.getCachedNPCs()[id];
+				NPCComposition nc = npc.getTransformedComposition();
+				name = nc.getName();
+				System.out.println(npcManager.getHealth(nc.getId()));
 				break;
 			default:
 				return;
@@ -180,6 +192,18 @@ public class ExaminePlugin extends Plugin
 		pendingExamine.setQuantity(quantity);
 		pendingExamine.setCreated(Instant.now());
 		pending.push(pendingExamine);
+		System.out.println("Type: "+type);
+		System.out.println("Game id: "+id);
+		System.out.println("Name: " + name);
+
+//		NPC npc = client.getCachedNPCs()[id];
+//		NPCComposition nc = npc.getTransformedComposition();
+//		id = nc.getId();
+//		System.out.println(npcManager.getHealth(id));
+//		name = nc.getName();
+//		System.out.println("type id: " + id);
+
+//		log.debug("Name of id: " + itemManager.getItemComposition(id).getName());
 	}
 
 	@Subscribe
@@ -262,6 +286,8 @@ public class ExaminePlugin extends Plugin
 
 		cache.put(key, Boolean.TRUE);
 		submitExamine(pendingExamine, event.getMessage());
+
+		log.debug(event.getMessage());
 	}
 
 	private int[] findItemFromWidget(int widgetId, int actionParam)
