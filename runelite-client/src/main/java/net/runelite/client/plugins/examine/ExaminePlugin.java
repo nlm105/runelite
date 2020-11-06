@@ -54,10 +54,16 @@ import net.runelite.client.game.ItemManager;
 import net.runelite.client.game.NPCManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.examine.ExaminePanel;
 import net.runelite.client.util.QuantityFormatter;
 import net.runelite.client.util.Text;
 import net.runelite.http.api.examine.ExamineClient;
 import okhttp3.OkHttpClient;
+import java.awt.image.BufferedImage;
+import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.ui.ClientToolbar;
+import net.runelite.client.util.ImageUtil;
+
 
 /**
  * Submits examine info to the api
@@ -93,7 +99,41 @@ public class ExaminePlugin extends Plugin
 
 	@Inject
 	private ChatMessageManager chatMessageManager;
+//////////////////////////////////////////////////////////////////////////////////////////
 
+
+	@Inject
+	private ClientToolbar clientToolbar;
+
+	private NavigationButton navButton;
+
+	@Override
+	protected void startUp() throws Exception
+	{
+		log.debug(ExaminePanel.class.toString());
+		final ExaminePanel panel = injector.getInstance(ExaminePanel.class);
+		panel.init();
+
+		final BufferedImage icon = ImageUtil.getResourceStreamFromClass(getClass(), "mag_glass_icon.png");
+
+		navButton = NavigationButton.builder()
+				.tooltip("Examine")
+				.icon(icon)
+				.priority(1)
+				.panel(panel)
+				.build();
+
+		clientToolbar.addNavigation(navButton);
+	}
+
+	@Override
+	protected void shutDown()
+	{
+		clientToolbar.removeNavigation(navButton);
+	}
+
+
+///////////////////////////////////////////////////////////////////////////////////////
 	@Provides
 	ExamineClient provideExamineClient(OkHttpClient okHttpClient)
 	{
