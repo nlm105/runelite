@@ -35,7 +35,7 @@ import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.SessionClose;
 import net.runelite.client.events.SessionOpen;
-import net.runelite.client.plugins.info.JRichTextPane;
+import net.runelite.client.plugins.examine.JRichTextPane;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
@@ -65,7 +65,13 @@ public class ExaminePanel extends PluginPanel
 //	private static final ImageIcon IMPORT_ICON;
 
 	private final JLabel loggedLabel = new JLabel();
-	private final net.runelite.client.plugins.info.JRichTextPane emailLabel = new JRichTextPane();
+	private final net.runelite.client.plugins.examine.JRichTextPane emailLabel = new JRichTextPane();
+
+	private static final JLabel type = new JLabel(htmlLabel("Type: ", ""));
+	private static final JLabel name = new JLabel(htmlLabel("Name: ", ""));
+	private static final net.runelite.client.plugins.examine.JRichTextPane wikiLnk = new JRichTextPane();
+
+
 	private JPanel syncPanel;
 	private JPanel actionsContainer;
 
@@ -101,18 +107,19 @@ public class ExaminePanel extends PluginPanel
 		setBackground(ColorScheme.DARK_GRAY_COLOR);
 		setBorder(new EmptyBorder(10, 10, 10, 10));
 
-		JPanel versionPanel = new JPanel();
-		versionPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		versionPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-		versionPanel.setLayout(new GridLayout(0, 1));
+		JPanel examinePanel = new JPanel();
+		examinePanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		examinePanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+		examinePanel.setLayout(new GridLayout(0, 1));
 
 		final Font smallFont = FontManager.getRunescapeSmallFont();
 
-		JLabel version = new JLabel(htmlLabel("RuneLite version: ", RuneLiteProperties.getVersion()));
-		version.setFont(smallFont);
 
-		JLabel testLabel = new JLabel(htmlLabel("This is a test", ""));
-		version.setFont(smallFont);
+
+		JLabel heading = new JLabel(htmlLabel("Examine Info", ""));
+		heading.setFont(smallFont);
+
+
 
 		JLabel revision = new JLabel();
 		revision.setFont(smallFont);
@@ -132,6 +139,18 @@ public class ExaminePanel extends PluginPanel
 		loggedLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 		loggedLabel.setFont(smallFont);
 
+		type.setFont(smallFont);
+		name.setFont(smallFont);
+		wikiLnk.setFont(smallFont);
+
+		type.setVisible(false);
+		name.setVisible(false);
+
+		wikiLnk.setVisible(false);
+//		wikiLnk.enableAutoLinkHandler(true);
+
+
+
 		emailLabel.setForeground(Color.WHITE);
 		emailLabel.setFont(smallFont);
 		emailLabel.enableAutoLinkHandler(false);
@@ -146,13 +165,17 @@ public class ExaminePanel extends PluginPanel
 			}
 		});
 
-		versionPanel.add(version);
-		versionPanel.add(testLabel);
-		versionPanel.add(revision);
-		versionPanel.add(launcher);
-		versionPanel.add(Box.createGlue());
-		versionPanel.add(loggedLabel);
-		versionPanel.add(emailLabel);
+		examinePanel.add(heading);
+		examinePanel.add(type);
+		examinePanel.add(name);
+		examinePanel.add(wikiLnk);
+		examinePanel.add(revision);
+		examinePanel.add(launcher);
+		examinePanel.add(Box.createGlue());
+		examinePanel.add(loggedLabel);
+		examinePanel.add(emailLabel);
+
+
 
 //		actionsContainer = new JPanel();
 //		actionsContainer.setBorder(new EmptyBorder(10, 0, 0, 0));
@@ -176,12 +199,29 @@ public class ExaminePanel extends PluginPanel
 //		actionsContainer.add(buildLinkPanel(PATREON_ICON, "Become a patron to", "help support RuneLite", RuneLiteProperties.getPatreonLink()));
 //		actionsContainer.add(buildLinkPanel(WIKI_ICON, "Information about", "RuneLite and plugins", RuneLiteProperties.getWikiLink()));
 
-		add(versionPanel, BorderLayout.NORTH);
+		add(examinePanel, BorderLayout.NORTH);
 //		add(actionsContainer, BorderLayout.CENTER);
 
 		updateLoggedIn();
 		eventBus.register(this);
 	}
+
+	public static void rebuildOnMenuClick(String examineType, String examineName){
+		type.setVisible(true);
+		name.setVisible(true);
+		wikiLnk.setVisible(true);
+		type.setText(htmlLabel("Type:", examineType));
+		name.setText(htmlLabel("Name: ", examineName));
+		wikiLnk.setContentType("text/html");
+		wikiLnk.setText("<a href=\"https://oldschool.runescape.wiki/w/" + examineName + "\">"
+				+ examineName + "</a> to go to Link");
+
+//		emailLabel.setText("<a href=\"" + RUNELITE_LOGIN + "\">Login</a> to sync settings to the cloud.");
+	}
+
+//	private String getWikiLink(String examineName){
+//		return
+//	}
 
 	/**
 	 * Builds a link panel with a given icon, text and url to redirect to.
@@ -264,6 +304,7 @@ public class ExaminePanel extends PluginPanel
 
 		return container;
 	}
+
 
 	private void updateLoggedIn()
 	{

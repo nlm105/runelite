@@ -236,6 +236,7 @@ public class ExaminePlugin extends Plugin
 		System.out.println("Game id: "+id);
 		System.out.println("Name: " + name);
 
+		ExaminePanel.rebuildOnMenuClick(type.toString(), name);
 //		NPC npc = client.getCachedNPCs()[id];
 //		NPCComposition nc = npc.getTransformedComposition();
 //		id = nc.getId();
