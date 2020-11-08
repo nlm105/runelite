@@ -235,8 +235,6 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 	 */
 	private int tempUvOffset;
 
-	private int lastViewportWidth;
-	private int lastViewportHeight;
 	private int lastCanvasWidth;
 	private int lastCanvasHeight;
 	private int lastStretchedCanvasWidth;
@@ -383,7 +381,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 				// force rebuild of main buffer provider to enable alpha channel
 				client.resizeCanvas();
 
-				lastViewportWidth = lastViewportHeight = lastCanvasWidth = lastCanvasHeight = -1;
+				lastCanvasWidth = lastCanvasHeight = -1;
 				lastStretchedCanvasWidth = lastStretchedCanvasHeight = -1;
 				lastAntiAliasingMode = null;
 
@@ -443,7 +441,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 
 					if (uniformBufferId != -1)
 					{
-						GLUtil.glDeleteBuffer(gl, uniformBufferId);
+						glDeleteBuffer(gl, uniformBufferId);
 						uniformBufferId = -1;
 					}
 
@@ -488,6 +486,8 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 			modelBufferSmall = null;
 			modelBuffer = null;
 			modelBufferUnordered = null;
+
+			lastAnisotropicFilteringLevel = -1;
 
 			// force main buffer provider rebuild to turn off alpha channel
 			client.resizeCanvas();
@@ -796,9 +796,9 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		}
 		else if (paint.getBufferLen() > 0)
 		{
-			x = tileX * Perspective.LOCAL_TILE_SIZE;
-			y = 0;
-			z = tileY * Perspective.LOCAL_TILE_SIZE;
+			final int localX = tileX * Perspective.LOCAL_TILE_SIZE;
+			final int localY = 0;
+			final int localZ = tileY * Perspective.LOCAL_TILE_SIZE;
 
 			GpuIntBuffer b = modelBufferUnordered;
 			++unorderedModels;
@@ -810,7 +810,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 			buffer.put(2);
 			buffer.put(targetBufferOffset);
 			buffer.put(FLAG_SCENE_BUFFER);
-			buffer.put(x).put(y).put(z);
+			buffer.put(localX).put(localY).put(localZ);
 
 			targetBufferOffset += 2 * 3;
 		}
@@ -830,9 +830,9 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		}
 		else if (model.getBufferLen() > 0)
 		{
-			x = tileX * Perspective.LOCAL_TILE_SIZE;
-			y = 0;
-			z = tileY * Perspective.LOCAL_TILE_SIZE;
+			final int localX = tileX * Perspective.LOCAL_TILE_SIZE;
+			final int localY = 0;
+			final int localZ = tileY * Perspective.LOCAL_TILE_SIZE;
 
 			GpuIntBuffer b = modelBufferUnordered;
 			++unorderedModels;
@@ -844,7 +844,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 			buffer.put(model.getBufferLen() / 3);
 			buffer.put(targetBufferOffset);
 			buffer.put(FLAG_SCENE_BUFFER);
-			buffer.put(x).put(y).put(z);
+			buffer.put(localX).put(localY).put(localZ);
 
 			targetBufferOffset += model.getBufferLen();
 		}
